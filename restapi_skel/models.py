@@ -74,7 +74,3 @@ class Task(db.Model):
             'user_id': self.user_id
         }
         return task
-
-    @staticmethod
-    def newest(num):
-        return Task.query.order_by(desc(Task.date)).limit(num)

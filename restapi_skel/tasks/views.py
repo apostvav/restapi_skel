@@ -1,16 +1,26 @@
-from flask import jsonify, request, abort
+from flask import jsonify, request, abort, g
 
 from . import tasks
 from .. import authentication as login
 from .. import db
-from ..models import User, Task
+from ..models import Task
 
 
 @tasks.route('/<int:task_id>', methods=['GET'])
 @login.login_required
 def get_task(task_id):
     task = Task.query.get_or_404(task_id)
-    return jsonify({'tasks': [task.serialize()]})
+    if task.user_id == g.user.id:
+        return jsonify({'tasks': [task.serialize()]})
+    else:
+        abort(403)
+
+
+@tasks.route('/', methods=['GET'])
+@login.login_required
+def get_tasks():
+    tasks = Task.query.filter_by(user_id=g.user.id)
+    return jsonify({'tasks': [task.serialize() for task in tasks]})
 
 
 @tasks.route('/', methods=['POST'])
@@ -23,7 +33,7 @@ def create_task():
     date = request.json['date']
     due_date = request.json['due_date']
     done = request.json['done']
-    user_id = User.query.filter_by(username=login.username()).first().id
+    user_id = g.user.id
     task = Task(title, description, date, due_date, done, user_id)
     db.session.add(task)
     db.session.commit

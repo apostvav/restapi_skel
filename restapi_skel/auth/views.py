@@ -12,7 +12,7 @@ def get_auth_token():
     return jsonify({'token': token.decode('ascii'), 'duration': 600})
 
 
-@auth.route('/resource')
+@auth.route('/whoami')
 @login.login_required
 def get_resource():
     return jsonify({'data': 'Hello, %s!' % g.user.username})

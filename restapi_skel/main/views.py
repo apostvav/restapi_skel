@@ -1,23 +1,12 @@
-from flask import jsonify, abort
+from flask import jsonify
 
 from . import main
-# from ..models import User
 
 
 @main.route('')
 @main.route('index')
 def index():
     return jsonify({'Hello': 'World'})
-
-
-@main.route('test')
-def test():
-    abort(400)
-
-
-@main.route('test2')
-def test2():
-    return jsonify({'message': 'YOLO'})
 
 
 @main.app_errorhandler(400)
