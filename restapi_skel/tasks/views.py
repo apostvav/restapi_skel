@@ -10,10 +10,9 @@ from ..models import Task
 @login.login_required
 def get_task(task_id):
     task = Task.query.get_or_404(task_id)
-    if task.user_id == g.user.id:
-        return jsonify({'tasks': [task.serialize()]})
-    else:
+    if task.user_id != g.user.id:
         abort(403)
+    return jsonify({'tasks': [task.serialize()]})
 
 
 @tasks.route('/', methods=['GET'])
@@ -29,36 +28,43 @@ def create_task():
     if not request.json or 'title' not in request.json:
         abort(400)
     title = request.json['title']
-    description = request.json['description']
-    date = request.json['date']
-    due_date = request.json['due_date']
-    done = request.json['done']
+    description = request.json.get('description', "")
+    date = request.json.get('date', None)
+    due_date = request.json.get('due_date', None)
+    done = False
     user_id = g.user.id
-    task = Task(title, description, date, due_date, done, user_id)
+    task = Task(title=title, description=description, date=date,
+                due_date=due_date, done=done, user_id=user_id)
     db.session.add(task)
-    db.session.commit
+    db.session.commit()
+    return jsonify({'task': [task.serialize()]}), 201
 
 
 @tasks.route('/<int:task_id>', methods=['PUT'])
 @login.login_required
 def edit_task(task_id):
     task = Task.query.get_or_404(task_id)
+    if task.user_id != g.user.id:
+        abort(403)
     if not request.json:
         abort(400)
     if 'done' in request.json and type(request.json['done']) is not bool:
         abort(400)
-    task.title = request.json['title']
-    task.description = request.json['description']
-    task.date = request.json['date']
-    task.due_date = request.json['due_date']
-    task.done = request.json['done']
-    task.user_id = request.json['user_id']
+    task.title = request.json.get('title', task.title)
+    task.description = request.json.get('description', task.description)
+    task.date = request.json.get('date', task.date)
+    task.due_date = request.json.get('due_date', task.due_date)
+    task.done = request.json.get('done', task.done)
     db.session.commit()
+    return jsonify({'task': [task.serialize()]})
 
 
 @tasks.route('/<int:task_id>', methods=['DELETE'])
 @login.login_required
 def delete_task(task_id):
     task = Task.query.get_or_404(task_id)
+    if task.user_id != g.user.id:
+        abort(403)
     db.session.delete(task)
     db.session.commit()
+    return jsonify({'result': True})
