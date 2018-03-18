@@ -1,9 +1,9 @@
 from datetime import datetime
-from sqlalchemy import desc
 from werkzeug.security import check_password_hash, generate_password_hash
 from itsdangerous import (TimedJSONWebSignatureSerializer
                           as Serializer, BadSignature, SignatureExpired)
 from restapi_skel import db
+from flask import current_app
 
 
 # User
@@ -25,13 +25,12 @@ class User(db.Model):
         return check_password_hash(self.password_hash, password)
 
     def generate_token(self, expiration=600):
-        s = Serializer(b'\x15\x01\xf7\x1b]\xce\xf1I\xc3\xc8\xb5^\x05\x9f\xc2\xe6\xd8,-\x06\xe7Z\xb7\xe0',
-                       expires_in=expiration)
+        s = Serializer(current_app.config['SECRET_KEY'], expires_in=expiration)
         return s.dumps({'id': self.id})
 
     @staticmethod
     def verify_token(token):
-        s = Serializer(b'\x15\x01\xf7\x1b]\xce\xf1I\xc3\xc8\xb5^\x05\x9f\xc2\xe6\xd8,-\x06\xe7Z\xb7\xe0')
+        s = Serializer(current_app.config['SECRET_KEY'])
         try:
             data = s.loads(token)
         except SignatureExpired:
@@ -47,7 +46,6 @@ class User(db.Model):
     def get_by_id(id):
         return User.query.filter_by(id=id)
 
-    # remove?
     @staticmethod
     def get_by_username(username):
         return User.query.filter_by(username=username).first()
