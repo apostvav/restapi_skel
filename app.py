@@ -1,9 +1,11 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
+
 import os
 from restapi_skel import create_app, db
 from restapi_skel.models import User, Task
 from flask_migrate import Migrate
 import click
+
 
 app = create_app(os.getenv('RESTAPI_SKEL_ENV') or 'dev')
 migrate = Migrate(app, db)
